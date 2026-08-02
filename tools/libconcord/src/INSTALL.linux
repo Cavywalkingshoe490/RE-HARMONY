@@ -1,0 +1,152 @@
+Note that Debian and Ubuntu how have packages for libconcord and we recommend
+you use those instead of installing from source. If you prefer to install from
+source, see the instructions below.
+
+
+==== BASIC INSTALLATION ====
+
+0. INSTALL REQUIRED SOFTWARE
+
+You *MUST* install libusb, libzip, and libcurl. These libraries are in most
+distributions, so apt-get/yum/up2date/urpmi/etc. it.
+
+You also need hidapi which can be found at: https://github.com/signal11/hidapi
+It is important that you use git, as the last release (0.7.0) doesn't work.
+You'll want to build it as a shared library, which is basically just
+"./bootstrap && ./configure --prefix=/usr && make && sudo make install",
+tweaked to your taste.
+
+NOTE ON HIDAPI TO DISTRIBUTORS: If your distro doesn't distribute hidapi, for
+the next few releases we are still supporting building directly on libusb with
+the --enable-force-libusb-on-linux option to configure. However, the libusb
+developers are strongly encouraging libusb who talk to HID devices to move to
+hidapi, so it's probably a good time to package hidapi. Finally, if that
+doesn't work for you, you can drop in the appropriate hid.c file from the
+hidapi source into the libconcord, and tweak the Makefile.am to build it as
+part of libconcord.
+
+Also, if you are using 900/1000/1100 remotes, then dnsmasq is a requirement,
+as well as installing the udev support files for libconcord (see below).
+
+If you're compiling libconcord from source, you'll also need the development
+packages - usually libusb-dev or libusb-devel (also libzip-dev/libzip-devel
+and libcurl-dev/libcurl-devel), depending on your distribution.
+
+1. BUILD LIBCONCORD
+
+   As a normal user...
+     A. ***IF**** You are building from git, run:
+        mkdir m4; autoreconf --install
+     B. Run "./configure"
+     C. Run "make"
+
+Various options, such as '--prefix' are available to the configure script to
+help you choose where software gets installed and how it is built.
+
+2. INSTALL THE SOFTWARE
+
+As root, simply run "make install"
+
+3. INSTALL UDEV/CONSOLEKIT/POLICYKIT SUPPORT (OPTIONAL)
+
+If you don't want to have to be root to use concordance (or any other
+libconcord frontend), you'll need to set up udev-acl, hal/consolekit, 
+hal/policykit or old udev support. Here are your options:
+
+* UDEV-ACL SUPPORT (recommended)
+
+Most modern distributions should use the udev-acl support. udev versions since
+167, released on 2011-03-30, have the necessary support for this method to
+work.
+
+With this option, all locally logged-in users will be able to have access
+to the remote control, but remote users (such as those logged in via ssh or
+fast user switching) will not. This support does not depend on anything beyond
+a sufficiently recent version of udev itself. To use the udev-acl support, do:
+
+  make udev
+  sudo make install_udev
+
+* GENERIC-UDEV SUPPORT
+
+If you have a modern system, but your login manager doesn't support
+consolekit, (notably, 'xdm'), you'll need to use generic udev support. With
+this option, anyone in the group 'dialout' will have access to the remote
+control. To use this, do:
+
+  make generic_udev
+  sudo make install_generic_udev
+
+* HAL/POLICYKIT SUPPORT
+
+This is for people on older distributions that use HAL+PolicyKit. It will
+generate the appropriate HAL/PolicyKit files and install them in the right
+place for the console user to have access to the remote when it's plugged in.
+It will work only if your distribution has udev, HAL and PolicyKit of around
+the correct vintage - approximately, the versions that were current in early
+2009 - correctly built to work with each other.
+
+To use hal/policykit support, you can do:
+
+  make policykit
+  sudo make install_policykit
+
+* HAL/CONSOLEKIT SUPPORT
+
+This will do much the same as the hal/policykit support does, only with
+consolekit instead. As with the hal/policykit support, it depends on having
+udev, HAL and ConsoleKit of an early 2009 vintage, correctly built to work
+together.
+
+* OLD_UDEV SUPPORT
+
+The safest option for old systems is the old generic udev support.  Like
+"UDEV-GENERIC", this will allow anyone in the "dialout" group to read and
+write to harmony remote controls connected to the machine. However, it uses
+the syntax necessary for very old versions of udev.
+
+  make old_udev
+  sudo make install_old_udev
+
+If you are not sure which method to use, and your distribution came out since
+March 2011, try the udev-acl option first, as it provides the cleanest
+configuration and most transparent operation. If it does not work, you can try
+the hal/consolekit or hal/policykit options, but old-udev is the most likely
+to work.
+
+NOTE:
+By default udev files will install in /lib/udev. You can override this by setting
+the UDEVLIBDIR environment variable (as root):
+
+  UDEVLIBDIR=/etc/udev make install_udev
+
+The policykit/consolekit files will install in datarootdir which is a subset
+of prefix, meaning, by default /usr/local/share. This will not work, so if you
+are using the hal/policykit/console kit targets, you must run ./configure
+with:
+*either*:
+  --prefix=/usr
+*or*:
+  --sysconfigdir=/etc --datarootdir=/usr/share
+
+The first one will install binaries in /usr/bin and libraries in /usr/lib which
+may potentially conflict with files installed by your distribution. The later
+will leave everything in /usr/local except for the udev/policykit/consolekit
+files.
+
+
+==== ADDITIONAL NOTES ====
+
+Because this software uses libusb, it does Direct IO. That means the library
+requires root priveleges to talk to the remote control, or the user
+must have the RAWIO capability. You can work around this with the optional
+step 3 above.
+
+In addition, libconcord attempts to unbind any in-kernel drivers that may
+bind to your remote. However, if it can't, you may need to unbind them manually.
+Check dmesg, if the hid driver attached to your Harmony follow the
+instructions here to unbind it:
+   http://lwn.net/Articles/143397/
+
+
+vim:textwidth=78:

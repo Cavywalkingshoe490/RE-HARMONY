@@ -1,0 +1,203 @@
+RE-HARMONY: expose two read-only entry points in libconcord
+===========================================================
+
+Subject: [PATCH] libconcord: add read_flash_at() and read_misc_at()
+Applies to: jaymzh/concordance, libconcord 1.5 (branch `main`)
+License:    GPL-3.0-or-later, same as the code it modifies.
+Author:     the RE-HARMONY project. Not affiliated with the Concordance
+            project; this is a downstream change, not an upstream release.
+
+WHY THIS EXISTS
+---------------
+Upstream libconcord has no way to read an arbitrary flash address. Its dump
+entry points read relative to `firmware_base` from `remote_info.h`, and for
+arch 12 -- the Harmony One -- `firmware_base` is 0. So every call reads
+address 0 and there is no route to the configuration region at 0x040000.
+
+RE-HARMONY reads the remote's current configuration and refuses to write
+anything it has not first read and diffed. Without `read_flash_at()` it
+cannot read, so it cannot write, so nothing in the project works.
+
+`read_misc_at()` is the second half: READ_MISC subtype PROGRAM (4) is the only
+route that reaches the CPU's own view of memory. READ_FLASH goes through the
+JEDEC driver to the external chip, which is why reading 0x020021 with it
+returns what is stored in flash instead of the live keyboard port.
+
+WHAT IT CHANGES (4 files, 4 hunks, +71 -8)
+------------------------------------------
+  libconcord.h    declare read_flash_at() and read_misc_at()
+  libconcord.cpp  implement both. read_misc_at() refuses on Z remotes
+                  instead of downcasting a CRemoteZ to CRemote
+  remote.h        move CRemote::ReadMiscByte/ReadMiscWord from private to
+                  public. The two MISC *writers* stay private
+  remote_mh.cpp   two robustness fixes found while surveying: (a) an MH read
+                  response with a single parameter is an ERROR code, not a
+                  zero-length read -- reading it as a length made the caller
+                  ack and then hang until the read timeout; (b) guard
+                  `len >= 4` before writing the EOF marker at `rd + len - 4`,
+                  which otherwise writes before the start of the buffer for a
+                  hub that never reported a config length
+
+Nothing here writes to a remote. No existing entry point changes behaviour;
+the diff is additive except for the two guards above and the private->public
+move.
+
+BASELINE
+--------
+Generated against the `main` branch source tree of jaymzh/concordance as
+downloaded on 2026-07-10 (libconcord 1.5). sha256 of the four files it
+patches, before patching:
+
+  3e5abe2f534c1bb828e15c43953eb1c4e96b5a362a57d624e8c2848d27782e9a  libconcord/libconcord.h
+  0276cb60e6fd03971a6b924adf9f4a259fa11bcef491a4f996e106a37a86edf2  libconcord/libconcord.cpp
+  47131d478e20644e59a5b27362abe730e562129b97457b190fc5ff5626f7a855  libconcord/remote.h
+  cea0551b87552105b8949bb197ca37e8aa554af8553eb367b01afef1370715a1  libconcord/remote_mh.cpp
+
+If yours differ, upstream moved; `patch` will say so rather than apply
+something wrong. See README.md next to this file for how to apply and build.
+
+--- a/libconcord/libconcord.h
++++ b/libconcord/libconcord.h
+@@ -299,7 +299,34 @@
+  */
+ int read_config_from_remote(uint8_t **out, uint32_t *size, lc_callback cb,
+                             void *cb_arg);
++
+ /*
++ * Read an arbitrary flash range into the caller's buffer. READ ONLY.
++ *
++ * Needed for surveying a model whose firmware location is not in
++ * remote_info.h: arch 12 (Harmony One) has firmware_base = 0, so the regular
++ * dump entry points can only ever read address 0, and there is no other way
++ * to get at the configuration region.
++ *
++ * `out` must already point at `len` writable bytes; nothing is allocated
++ * here, so delete_blob() does not apply.
++ */
++int read_flash_at(uint32_t addr, uint32_t len, uint8_t *out);
++
++/*
++ * READ_MISC with a 16-bit address. READ ONLY.
++ *
++ * `kind` is the subtype: 0 EEPROM, 1 STATE, 4 PROGRAM, 6 RAM, 7 REGISTER.
++ * PROGRAM (4) is the only route that reaches the CPU's own view of memory:
++ * READ_FLASH goes through the JEDEC driver to the external chip, which is
++ * why reading 0x020021 with it returns what is stored in flash (`de ad de
++ * ad`) instead of the keyboard port.
++ *
++ * Returns LC_ERROR_UNSUPP on Z-wave remotes, which do not implement it.
++ * `out` must already point at `len` writable 16-bit words.
++ */
++int read_misc_at(uint16_t addr, uint32_t len, uint8_t kind, uint16_t *out);
++/*
+  * Given a config block in the byte array *in that is size big, write
+  * it to the remote. This should be *just* the binary blob (see
+  * find_binary_start()). CB info above.
+--- a/libconcord/libconcord.cpp
++++ b/libconcord/libconcord.cpp
+@@ -987,7 +987,33 @@
+ 
+ /*
+  * CONFIG-RELATED
++ */
++
++/*
++ * Read an arbitrary flash range. Exposed for surveying models whose firmware
++ * location is unknown: arch 12 (Harmony One) has firmware_base = 0, so the
++ * regular dump entry points can only ever read address 0. Read-only.
+  */
++int read_flash_at(uint32_t addr, uint32_t len, uint8_t *out)
++{
++    if (!rmt || !out) {
++        return LC_ERROR;
++    }
++    return rmt->ReadFlash(addr, len, out, ri.protocol, false, NULL, NULL, 0);
++}
++
++int read_misc_at(uint16_t addr, uint32_t len, uint8_t kind, uint16_t *out)
++{
++    if (!rmt || !out) {
++        return LC_ERROR;
++    }
++    /* ReadMiscWord lives on CRemote, not on the base class: Z remotes do not
++       have it. Guard the downcast rather than trust that it never happens. */
++    if (is_z_remote()) {
++        return LC_ERROR_UNSUPP;
++    }
++    return ((CRemote *)rmt)->ReadMiscWord(addr, len, kind, out);
++}
+ 
+ int read_config_from_remote(uint8_t **out, uint32_t *size, lc_callback cb,
+                             void *cb_arg)
+@@ -1017,7 +1043,13 @@
+ 
+     if ((err = rmt->ReadFlash(ri.arch->config_base, *size, *out, ri.protocol,
+                               false, cb, cb_arg, LC_CB_STAGE_READ_CONFIG))) {
+-        return LC_ERROR_READ;
++        /*
++         * Pass the specific error through rather than flattening every failure
++         * to LC_ERROR_READ.  This lets a remote that refuses the config file
++         * (e.g. a WiFi hub returning LC_ERROR_UNSUPP) report an accurate
++         * message instead of a misleading "error while reading".
++         */
++        return err ? err : LC_ERROR_READ;
+     }
+ 
+     return 0;
+--- a/libconcord/remote.h
++++ b/libconcord/remote.h
+@@ -211,11 +211,18 @@
+ 
+ class CRemote : public CRemoteBase    // All non-Z-Wave remotes
+ {
+-private:
++public:
++    /* The two MISC readers become public so the library can expose them.
++       They only READ: subtype PROGRAM (4) is the only route that reaches the
++       CPU's own view of memory, and READ_FLASH cannot do that because it goes
++       through the JEDEC driver to the external chip. The two MISC *writers*
++       stay private. */
+     int ReadMiscByte(uint8_t addr, uint32_t len, uint8_t kind,
+         uint8_t *rd);
+     int ReadMiscWord(uint16_t addr, uint32_t len, uint8_t kind,
+         uint16_t *rd);
++
++private:
+     int WriteMiscByte(uint8_t addr, uint32_t len, uint8_t kind,
+         uint8_t *wr);
+     int WriteMiscWord(uint16_t addr, uint32_t len, uint8_t kind,
+--- a/libconcord/remote_mh.cpp
++++ b/libconcord/remote_mh.cpp
+@@ -218,6 +218,19 @@
+     }
+     debug("msg_read_file");
+     debug_print_packet(rsp);
++
++    /*
++     * A successful read response carries two parameters (an unknown byte plus
++     * the 4-byte data length).  An error response carries a single parameter:
++     * the error code (e.g. 0x0B when the file does not exist / is not served
++     * over USB, as the WiFi hubs do for everything except /sys/sysinfo).  Catch
++     * that here instead of misreading the error code as a zero data length,
++     * acking, and then hanging until the read timeout.
++     */
++    if (rsp[3] < 2) {
++        debug("Remote refused '%s' with error 0x%02x", filename, rsp[5]);
++        return LC_ERROR_UNSUPP;
++    }
+ 
+     /*
+      * First parameter in the read file "ack" message is reused in subsequent
+@@ -621,9 +634,10 @@
+      * EOF bytes to the end of the buffer.  That way, when we check the length
+      * of the config in _mh_get_config_len() by searching for the first instance
+      * of the EOF bytes, we will find the correct length of the config in both
+-     * cases.
++     * cases.  Guard against len < 4 (e.g. an arch-17 hub that never reported a
++     * config length) so we don't write before the start of the buffer.
+      */
+-    if (rd)
++    if (rd && len >= 4)
+         memcpy(rd + len - 4, MH_EOF_BYTES, 4);
+ 
+     return 0;

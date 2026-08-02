@@ -1,0 +1,995 @@
+/* RE-HARMONY -- desktop app.
+   No framework, no CDN, no gradients. Light and dark via prefers-color-scheme.
+   System typeface; whitespace does the hierarchy. */
+
+:root {
+  color-scheme: light dark;
+  --bg: #fbfbfa;
+  --panel: #ffffff;
+  --tinta: #1b1b19;
+  --suave: #6f6e68;
+  --tenue: #96958e;
+  --linea: #e5e4df;
+  --linea-fuerte: #d6d5cf;
+  --acento: #2f6f4e;
+  --acento-suave: #eef4f0;
+  --alarma: #a33323;
+  --alarma-suave: #fcf1ef;
+  --aviso: #8a6a15;
+  --aviso-suave: #fbf6e6;
+  --radio: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #151514;
+    --panel: #1d1d1b;
+    --tinta: #ecebe5;
+    --suave: #9c9b93;
+    --tenue: #78776f;
+    --linea: #2e2e2b;
+    --linea-fuerte: #3b3a36;
+    --acento: #79bd97;
+    --acento-suave: #182320;
+    --alarma: #ef8b7c;
+    --alarma-suave: #281917;
+    --aviso: #dcb85f;
+    --aviso-suave: #262015;
+  }
+}
+
+* { box-sizing: border-box; }
+
+/* `[hidden]` has to win over any class's `display`. Without this,
+   `.fila { display:flex }` overrides the attribute and a "hidden" block
+   shows up all the same -- which is exactly how the apply buttons with
+   zero pending changes slipped through on the Keys screen's first run. */
+[hidden] { display: none !important; }
+
+/* `body` does NOT carry height:100%. With a fixed height, the sticky `nav`
+   can't stay pinned past the window's height: as soon as a tab has more
+   content than the screen (Control with the device list, Mapping with the
+   whole remote), the left sidebar would scroll away and disappear.
+   `min-height:100vh` (further below, on `body`) already covers the
+   low-content case. */
+html { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--tinta);
+  font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  display: grid;
+  grid-template-columns: 208px 1fr;
+  min-height: 100vh;
+}
+
+/* ---------------------------------------------------------------- nav --- */
+
+nav {
+  background: var(--panel);
+  border-right: 1px solid var(--linea);
+  padding: 30px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+nav h1 {
+  margin: 0 0 22px 11px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--tenue);
+}
+
+button.nav {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 11px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--suave);
+  font: inherit;
+  cursor: pointer;
+}
+
+button.nav:hover { background: var(--bg); color: var(--tinta); }
+
+button.nav[aria-current="page"] {
+  background: var(--bg);
+  color: var(--tinta);
+  font-weight: 600;
+}
+
+.pie {
+  margin-top: auto;
+  padding: 12px 11px 0;
+  border-top: 1px solid var(--linea);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--tenue);
+  word-break: break-word;
+}
+
+/* --------------------------------------------------------------- main --- */
+
+main { padding: 46px 54px 80px; max-width: 940px; }
+
+section { display: none; }
+section.viva { display: block; animation: entra .16s ease-out; }
+
+@keyframes entra { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; } }
+
+h2 {
+  margin: 0 0 6px;
+  font-size: 27px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.sub { margin: 0 0 30px; color: var(--suave); }
+.sub.chico { font-size: 13px; margin: 0 0 14px; }
+
+.tarjeta {
+  background: var(--panel);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  padding: 22px 24px 24px;
+  margin-bottom: 18px;
+}
+
+.tarjeta h3 {
+  margin: 0 0 16px;
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.paso {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--linea-fuerte);
+  color: var(--suave);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* -------------------------------------------------------------- forms --- */
+
+label {
+  display: block;
+  margin: 16px 0 5px;
+  font-size: 12.5px;
+  color: var(--suave);
+}
+
+label.chk {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--tinta);
+  line-height: 1.45;
+}
+
+label.chk input { margin-top: 3px; flex: 0 0 auto; }
+label.chk.peligro { color: var(--alarma); }
+
+input[type="text"], input[type="password"], select {
+  width: 100%;
+  padding: 8px 11px;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--tinta);
+  font: inherit;
+  font-size: 13.5px;
+}
+
+input:focus, select:focus {
+  outline: 2px solid var(--acento);
+  outline-offset: -1px;
+  border-color: transparent;
+}
+
+select { appearance: none; padding-right: 26px; }
+
+.fila { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; margin-top: 18px; }
+.fila input[type="text"] { flex: 1 1 180px; width: auto; }
+.fila-archivo { display: flex; gap: 8px; align-items: center; }
+.fila-archivo > :first-child { flex: 1 1 auto; min-width: 0; }
+.dos { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+
+button.accion {
+  padding: 8px 15px;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--tinta);
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+button.accion:hover:not(:disabled) { border-color: var(--suave); }
+button.accion:disabled { opacity: .42; cursor: not-allowed; }
+button.accion.chico { padding: 8px 11px; font-size: 12.5px; color: var(--suave); }
+
+button.primaria {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: #fff;
+}
+button.primaria:hover:not(:disabled) { filter: brightness(1.06); }
+
+button.peligro {
+  background: var(--alarma);
+  border-color: var(--alarma);
+  color: #fff;
+}
+button.peligro:hover:not(:disabled) { filter: brightness(1.06); }
+
+/* ------------------------------------------------------------- output --- */
+
+pre {
+  margin: 16px 0 0;
+  padding: 13px 14px;
+  background: var(--bg);
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.nota {
+  margin: 14px 0;
+  padding: 12px 15px;
+  border-radius: 8px;
+  border-left: 3px solid var(--linea-fuerte);
+  background: var(--bg);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.nota.alarma { border-left-color: var(--alarma); background: var(--alarma-suave); }
+.nota.aviso  { border-left-color: var(--aviso);  background: var(--aviso-suave); }
+.nota.ok     { border-left-color: var(--acento); background: var(--acento-suave); }
+/* "the app broke". DELIBERATELY not red: red here is the vocabulary of the
+ * gate refusing to write, and a crash is not the control refusing anything.
+ * Painting a bug in the protection colour is what taught the user to read
+ * "the check did not pass" as noise. Neutral, technical, unmistakably
+ * different from the two notes that mean the remote is being protected. */
+.nota.rota {
+  background: var(--panel);
+  border: 1px dashed var(--linea-fuerte);
+  border-left: 3px solid var(--suave);
+}
+.nota b { font-weight: 600; }
+
+/* FIRST USE: the note that offers to read the remote instead of naming a file
+ * that isn't there. The button sits INSIDE the note, on its own line, with the
+ * "only reads" next to it -- the promise and the action have to be readable in
+ * one glance, or the promise is decoration. */
+.primer-uso-accion { margin: 10px 0 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.primer-uso-accion .vacio { font-style: normal; }
+
+.chip {
+  display: inline-block;
+  margin: 0 5px 4px 0;
+  padding: 2px 9px;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 99px;
+  font-size: 11.5px;
+  color: var(--suave);
+  white-space: nowrap;
+}
+.chip.si { color: var(--acento); border-color: var(--acento); }
+.chip.no { color: var(--alarma); border-color: var(--alarma); }
+.chip.espera { color: var(--aviso); border-color: var(--aviso); }
+/* The Keys screen's vocabulary, so a count reads the same colour as the
+   legend right above it. */
+.chip.asignada { color: var(--acento); border-color: var(--acento); }
+.chip.pendiente { color: var(--aviso); border-color: var(--aviso); }
+.chip.bloqueada { color: var(--tenue); border-style: dashed; }
+
+/* ------------------------------------------- the standard-key plan ------
+   One block per device: what is bound, what is not, and why not. Every
+   number and reason comes from Python; this only lays it out. */
+.plantilla-lista { display: grid; gap: 12px; }
+.plantilla-item {
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  padding: 10px 12px;
+}
+.plantilla-cab { font-size: 13.5px; margin-bottom: 6px; }
+.plantilla-cab .vacio { font-size: 12px; }
+.plantilla-chips { margin-bottom: 4px; }
+.plantilla-linea { font-size: 12.5px; line-height: 1.5; color: var(--suave); }
+.plantilla-falta {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--suave);
+  margin-top: 6px;
+}
+.plantilla-falta b { color: var(--tinta); }
+.plantilla-item .fila { margin-top: 10px; }
+.plantilla-res:empty { display: none; }
+
+.vacio { color: var(--tenue); font-style: italic; font-size: 13.5px; }
+
+.datos { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; font-size: 13px; margin: 0; }
+.datos dt { color: var(--suave); }
+.datos dd { margin: 0; word-break: break-all; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+th, td { text-align: left; padding: 9px 10px 9px 0; border-bottom: 1px solid var(--linea); vertical-align: top; }
+th { color: var(--tenue); font-weight: 500; font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; }
+tr:last-child td { border-bottom: 0; }
+td.acciones { text-align: right; white-space: nowrap; }
+td.acciones button { margin-left: 6px; }
+
+/* ------------------------------------------- a device that can't be added --
+ *
+ * A device with commands but no timing definition for its protocol cannot be
+ * turned into a waveform, so Sync would refuse it. It used to look exactly
+ * like a working one, and the user only found out at the end. It now reads
+ * as unfinished at a glance -- muted, with a marked left edge -- and carries
+ * its reason in the row right underneath.
+ *
+ * The left edge is drawn on the first cell, not with `border-left` on the
+ * `<tr>`: with `border-collapse: collapse` a row border does not render in
+ * every engine, while a cell border always does. */
+tbody tr.no-aplicable > td { opacity: .62; }
+tbody tr.no-aplicable > td:first-child {
+  opacity: 1;
+  border-left: 3px solid var(--aviso);
+  padding-left: 9px;
+}
+tbody tr.no-aplicable > td:first-child b { color: var(--suave); }
+/* The reason and the delete confirmation hang off the row above them, so
+ * neither draws its own separating line. */
+tbody tr.no-aplicable > td { border-bottom: 0; }
+tbody tr.no-aplicable-motivo > td,
+tbody tr.confirmar-borrado > td { padding-top: 0; }
+tbody tr.confirmar-borrado > td { background: var(--alarma-suave); }
+
+/* --------------------------------------------------------- long lists --- *
+ * Fixed-height frame with its own scroll for lists that can grow a lot
+ * (Catalog search results, what's already ready to add, and the commands
+ * of a hand-imported .ir -- an IRDB file brings 40+): the card that holds
+ * them never overflows the window, and the table header stays pinned at
+ * the top while it scrolls inside. Always present (doesn't depend on
+ * `:has()`, which some embedded WebKits lack): with little content the
+ * frame simply never shows a scrollbar. */
+#resultados,
+#locales,
+.marco-lista {
+  max-height: 360px;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  padding: 2px 12px;
+  margin-top: 10px;
+}
+#resultados table,
+#locales table,
+.marco-lista table {
+  margin-top: 0;
+}
+#resultados thead th,
+#locales thead th,
+.marco-lista thead th {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  background: var(--bg);
+  border: 1px solid var(--linea);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+.cargando { color: var(--tenue); font-size: 13px; margin-top: 12px; }
+
+/* ------------------------------------------------------- control status --- */
+
+.estado-grande {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+}
+.estado-grande.cargando {
+  font-size: 14px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--tenue);
+}
+
+button.accion.grande { padding: 11px 22px; font-size: 14.5px; }
+
+/* --------------------------------------------------------- view details --- */
+
+details.tarjeta { padding: 16px 24px; }
+details.tarjeta[open] { padding-bottom: 22px; }
+details.tarjeta summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--suave);
+  list-style: none;
+}
+details.tarjeta summary::-webkit-details-marker { display: none; }
+details.tarjeta summary::before { content: "▸  "; }
+details.tarjeta[open] summary { margin-bottom: 14px; }
+details.tarjeta[open] summary::before { content: "▾  "; }
+
+/* Small inline "Show details" used INSIDE a card's own innerHTML (History,
+   Activities), for a technical dump that stays available but isn't the
+   first thing you read. Not a card itself: no border, no padding. */
+details.ver-mas { margin-top: 10px; }
+details.ver-mas summary {
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 12.5px;
+  color: var(--suave);
+  list-style: none;
+}
+details.ver-mas summary::-webkit-details-marker { display: none; }
+details.ver-mas summary::before { content: "▸  "; }
+details.ver-mas[open] summary::before { content: "▾  "; }
+details.ver-mas[open] summary { margin-bottom: 8px; }
+
+/* -------------------------------------------------------------- keys -- */
+
+.nota.info { border-left-color: var(--acento); background: var(--acento-suave); }
+
+.teclas-barra {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 14px 0 18px;
+}
+.teclas-grupo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.teclas-barra label { margin: 0; font-size: 13px; color: var(--suave); }
+.teclas-barra select { width: auto; min-width: 150px; margin: 0; }
+.pista { font-size: 12.5px; color: var(--suave); font-style: italic; }
+
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.pastilla {
+  font-size: 11.5px;
+  border-radius: 20px;
+  padding: 3px 10px 3px 22px;
+  border: 1px solid var(--linea);
+  position: relative;
+  color: var(--suave);
+}
+.pastilla::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  border: 1px solid var(--linea);
+}
+.pastilla.asignada::before { background: var(--acento); border-color: var(--acento); }
+.pastilla.libre::before { background: transparent; }
+.pastilla.pendiente::before { background: var(--aviso); border-color: var(--aviso); }
+.pastilla.pantalla::before {
+  background: rgba(120, 170, 255, .35);
+  border-color: rgba(120, 170, 255, .8);
+  border-radius: 50%;
+}
+.pastilla.bloqueada::before {
+  background: repeating-linear-gradient(45deg, var(--linea) 0 2px, transparent 2px 4px);
+}
+
+/* --------------------------------------------------- the remote's photo --
+
+   The Keys screen draws the remote from the MEASURED button coordinates
+   (`app/ui/remote/keys.json` -> `config_work/draw_remote_svg.py` ->
+   `app/ui/remote/remote.svg`), with the clickable SVG layer on top sharing
+   that same 246x907 coordinate system, so zone and pixel line up with
+   not a single loose constant. No photograph is redistributed; you can
+   regenerate the drawing and check.
+
+   The zones are SUBTLE on purpose: a translucent veil and a thin outline,
+   not a hard box. The drawing is dark in both themes, so the highlight is
+   done with whites and the accent color; what changes between light and
+   dark is the frame, the shadow, and the caption. */
+.mando-foto {
+  position: relative;
+  width: 100%;
+  max-width: 322px;
+  margin: 0 auto;
+}
+/* The SVG has a transparent background, so the remote sits on top of the
+   app's color and stays equally clean in light and dark, with no white
+   rectangle behind it. The shadow follows the silhouette, not a box. */
+.mando-foto img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .22)) drop-shadow(0 14px 26px rgba(0, 0, 0, .16));
+}
+@media (prefers-color-scheme: dark) {
+  .mando-foto img {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .6)) drop-shadow(0 16px 30px rgba(0, 0, 0, .5));
+  }
+}
+.capa-zonas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.pie-foto {
+  max-width: 322px;
+  margin: 10px auto 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--tenue);
+  text-align: center;
+}
+
+/* -- one zone: the veil, the outline, and the state ---------------------- */
+.capa-zonas .z { cursor: pointer; }
+.capa-zonas .z .cara {
+  fill: rgba(255, 255, 255, .05);
+  stroke: rgba(255, 255, 255, .20);
+  stroke-width: .9;
+  transition: fill .13s ease, stroke .13s ease, stroke-width .13s ease;
+}
+.capa-zonas .z .marca {
+  fill: none;
+  stroke: none;
+  pointer-events: none;
+}
+/* already does something */
+.capa-zonas .z.asignada .cara {
+  fill: rgba(104, 196, 148, .20);
+  stroke: rgba(134, 224, 176, .62);
+}
+/* free: the mechanism exists, no command is set */
+.capa-zonas .z.libre .cara {
+  fill: rgba(255, 255, 255, .045);
+  stroke: rgba(255, 255, 255, .30);
+  stroke-dasharray: 2.4 2;
+}
+/* changed, not applied yet */
+.capa-zonas .z.pendiente .cara {
+  fill: rgba(232, 176, 62, .34);
+  stroke: rgba(255, 208, 110, .85);
+  stroke-width: 1.3;
+}
+/* can't be changed: it's VISIBLE, it can be tapped (it explains why), but
+   promises nothing -- almost no veil, and a broken outline */
+.capa-zonas .z.bloqueada .cara {
+  fill: rgba(255, 255, 255, .015);
+  stroke: rgba(255, 255, 255, .17);
+  stroke-dasharray: 1.6 2.6;
+}
+.capa-zonas .z.bloqueada { cursor: help; }
+
+.capa-zonas .z:hover .cara {
+  fill: rgba(255, 255, 255, .16);
+  stroke: rgba(255, 255, 255, .92);
+  stroke-width: 1.4;
+  stroke-dasharray: none;
+}
+.capa-zonas .z.seleccionada .cara {
+  fill: rgba(255, 255, 255, .22);
+  stroke: #ffffff;
+  stroke-width: 1.8;
+  stroke-dasharray: none;
+}
+.capa-zonas .z:focus { outline: none; }
+.capa-zonas .z:focus-visible .cara {
+  stroke: #ffffff;
+  stroke-width: 1.8;
+  stroke-dasharray: none;
+}
+
+/* The LCD rectangle: it isn't a key and can't be selected. It only marks
+   where the screen ends, so it reads clearly that what's inside are
+   touch zones, not rubber buttons. */
+.capa-zonas .lcd-marco {
+  fill: none;
+  stroke: rgba(255, 255, 255, .16);
+  stroke-width: .7;
+  pointer-events: none;
+}
+.capa-zonas .lcd-vacio {
+  fill: rgba(255, 255, 255, .55);
+  font: 500 5.4px -apple-system, system-ui, sans-serif;
+  text-anchor: middle;
+  pointer-events: none;
+}
+/* The LCD's touch zones carry the label inside: there's enough room there,
+   and it's the only way to tell which is which without tapping them one
+   by one. */
+.capa-zonas .z.enpantalla .rotulo {
+  fill: rgba(255, 255, 255, .92);
+  font: 600 5px -apple-system, system-ui, sans-serif;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, .55);
+  stroke-width: 1.1;
+}
+
+.tabla { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.tabla td { padding: 5px 8px; border-bottom: 1px solid var(--linea); vertical-align: top; }
+.tabla td:nth-child(2) { white-space: nowrap; font-weight: 600; }
+
+.mapeo-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 330px) 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.mapeo-mando {
+  display: flex;
+  justify-content: center;
+}
+
+.mapeo-mando { flex-direction: column; }
+
+/* The remote is VERY tall (907 px of drawing, taller on screen): without this,
+   scrolling down to tap the number pad pushes the right-hand panel off
+   screen and you can't see either which button you picked or the
+   selector. */
+.mapeo-panel { position: sticky; top: 14px; align-self: start; }
+/* Without `min-width:0` a long cell in the coverage table beats the
+   grid's `1fr` and pushes the WHOLE page to the right (seen in light
+   theme with the coverage detail open). */
+.mapeo-layout > * { min-width: 0; }
+.mapeo-panel .tabla { table-layout: fixed; }
+.mapeo-panel .tabla td { overflow-wrap: anywhere; }
+.mapeo-panel .tabla td:first-child { width: 32%; white-space: normal; }
+/* The general rule `.tabla td:nth-child(2) { white-space: nowrap }` is meant
+   for the history table; here the second column is a long sentence, and
+   with nowrap it runs off the panel. */
+.mapeo-panel .tabla td:nth-child(2) { white-space: normal; font-weight: 400; }
+.mapeo-panel .tarjeta:last-child { margin-bottom: 0; }
+
+/* --- Control: the list of what the remote has today --------------------- */
+.disp-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--linea);
+  flex-wrap: wrap;
+}
+.disp-item:last-child { border-bottom: 0; }
+.disp-nombre { font-size: 15px; font-weight: 600; }
+.disp-datos { font-size: 12.5px; color: var(--suave); margin-top: 3px; }
+.disp-datos .por-que { font-style: italic; }
+.disp-izq { min-width: 0; flex: 1 1 auto; }
+.disp-der { flex: 0 0 auto; }
+
+.mapeo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--linea);
+  font-size: 13px;
+}
+.mapeo-item:last-child { border-bottom: 0; }
+.mapeo-item b { font-weight: 600; }
+.mapeo-item .quitar {
+  border: 0;
+  background: none;
+  color: var(--alarma);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+@media (max-width: 900px) {
+  .mapeo-layout { grid-template-columns: 1fr; }
+  .mando-foto, .pie-foto { max-width: 280px; }
+}
+
+@media (max-width: 760px) {
+  body { grid-template-columns: 1fr; }
+  nav { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; }
+  nav h1 { margin: 0 14px 0 0; }
+  .pie { display: none; }
+  main { padding: 28px 22px 60px; }
+  .dos { grid-template-columns: 1fr; }
+}
+
+/* ============================ ACTIVITIES ================================
+   One card per activity, with WHICH DEVICE each one TOUCHES. The styles
+   reuse the variables from above; there's no new palette. */
+
+.act-item {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--linea);
+}
+.act-item:last-child { border-bottom: 0; }
+.act-item .item-cab { font-size: 15px; margin-bottom: 8px; }
+.act-item .fila { margin-top: 12px; }
+.act-item .chico { font-size: 12.5px; }
+
+.act-aparatos, .act-faltan {
+  margin: 6px 0 0;
+  padding: 0 0 0 18px;
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+.act-aparatos li { margin-bottom: 4px; }
+.act-faltan li { margin-bottom: 14px; }
+.act-aparatos .fila { margin-top: 8px; }
+
+.act-bloque {
+  margin: 0 0 20px;
+  padding: 0 0 20px;
+  border-bottom: 1px solid var(--linea);
+}
+.act-bloque:last-of-type { border-bottom: 0; }
+.act-bloque h4 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tenue);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.act-bloque select { max-width: 320px; }
+
+#act-metodo ul { margin: 8px 0 0; padding-left: 18px; line-height: 1.65; }
+#act-metodo li { margin-bottom: 8px; }
+
+/* `.chico` sets `color: var(--suave)` with more specificity than
+   `.peligro`, and that left red-on-red unreadable. A destructive button's
+   text has to be legible. */
+button.accion.chico.peligro,
+button.accion.chico.primaria { color: #fff; }
+
+/* ================================ SYNC ==================================
+   The pending-changes bar and the session modal. Reuses the palette from
+   :root -- no new colours. The bar lives in <nav>, so unlike `.pie` it must
+   NOT be hidden on narrow screens: it is the only way to reach the button
+   that writes the control. */
+
+.sync-barra {
+  margin-top: auto;
+  padding: 12px 11px;
+  border-top: 1px solid var(--linea);
+}
+.sync-vacio {
+  font-size: 11.5px;
+  color: var(--tenue);
+  line-height: 1.5;
+}
+.sync-barra button.accion { width: 100%; }
+
+.sync-lista { margin: 12px 0; }
+.sync-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  margin-bottom: 7px;
+  background: var(--bg);
+}
+.sync-item-txt { font-size: 13.5px; line-height: 1.45; }
+.sync-item .quitar {
+  border: 0;
+  background: none;
+  color: var(--alarma);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 4px;
+  flex: 0 0 auto;
+}
+
+/* ONE LINE OF STATUS. Sync used to answer "what is happening" with four
+   stacked paragraphs; now every moment has exactly one of these, and the
+   dot carries the state so the sentence doesn't have to repeat it. */
+.sync-estado {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  margin: 4px 0 2px;
+}
+.sync-estado .sync-punto {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--suave);
+  transform: translateY(-1px);
+}
+.sync-estado.ok .sync-punto { background: var(--acento); }
+.sync-estado.alarma .sync-punto { background: var(--alarma); }
+.sync-estado.aviso .sync-punto { background: var(--aviso); }
+/* the app broke: a hollow dot, not the red one. See `.nota.rota`. */
+.sync-estado.rota .sync-punto {
+  background: transparent;
+  border: 2px solid var(--suave);
+}
+.sync-estado.trabajando .sync-punto {
+  background: var(--aviso);
+  animation: sync-latido 1.1s ease-in-out infinite;
+}
+@keyframes sync-latido { 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) {
+  .sync-estado.trabajando .sync-punto { animation: none; }
+}
+
+/* RULE 4: a delete is the only irreversible thing here, so what it costs
+   stays visible instead of moving into "Show details". One line. */
+.sync-perdida {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--alarma);
+  margin: -2px 0 12px;
+}
+
+/* WHAT GOT BOUND ON ITS OWN. Same rank as the delete warning and for the
+   same reason: it is part of what is being accepted, not technical detail,
+   so it stays visible with no click. Green, because it is something the
+   file GAINS -- the delete line is the red one. */
+.sync-plantilla {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--suave);
+  background: var(--acento-suave);
+  border-left: 3px solid var(--acento);
+  border-radius: 0 var(--radio) var(--radio) 0;
+  padding: 9px 12px;
+  margin: 0 0 12px;
+}
+.sync-plantilla div + div { margin-top: 6px; }
+.sync-plantilla b { color: var(--tinta); }
+
+/* Sits right under the red button, as part of it -- the explicit on-screen
+   confirmation that replaced the environment variable. */
+.sync-confirmar { margin: 8px 0 0; }
+
+.sync-vermas { margin-top: 2px; }
+.sync-parrafo {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--suave);
+  white-space: pre-wrap;
+  margin-bottom: 10px;
+}
+.sync-acciones { margin-top: 16px; }
+
+/* While the write runs, nothing in the box can be touched. `SYNC_CORRIENDO`
+   already refuses to close the modal; this makes it visible and takes the
+   clicks away too. */
+.sync-caja.sync-bloqueado { cursor: progress; }
+.sync-caja.sync-bloqueado .sync-lista,
+.sync-caja.sync-bloqueado button:not(#btn-sync-cerrar) { pointer-events: none; }
+.sync-caja.sync-bloqueado .sync-cerrar { opacity: .3; cursor: not-allowed; }
+
+#sync-modal[hidden] { display: none; }
+#sync-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  padding: 24px;
+}
+.sync-caja {
+  background: var(--panel);
+  border-radius: 14px;
+  border: 1px solid var(--linea-fuerte);
+  padding: 22px 26px 26px;
+  max-width: 640px;
+  width: 100%;
+  max-height: 88vh;
+  overflow: auto;
+}
+.sync-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+.sync-cabecera h3 { margin: 0; font-size: 17px; }
+.sync-cerrar {
+  border: 0;
+  background: none;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--tenue);
+  cursor: pointer;
+  padding: 0 2px;
+}
+.sync-cerrar:hover { color: var(--tinta); }
+
+/* The progress bar. `<progress>` is skinned differently by every engine, so
+   this is two plain divs -- one width animation, no surprises. */
+.sync-barra-prog {
+  height: 10px;
+  border-radius: 6px;
+  background: var(--linea);
+  overflow: hidden;
+  margin: 14px 0 6px;
+}
+.sync-barra-prog-relleno {
+  height: 100%;
+  background: var(--acento);
+  transition: width .35s ease;
+}
+.sync-prog-txt {
+  font-size: 12px;
+  color: var(--suave);
+  margin-bottom: 10px;
+}
+.sync-log {
+  max-height: 190px;
+  overflow: auto;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  /* `.pie` is hidden at this width; the Sync bar is NOT -- see above. */
+  .sync-barra {
+    margin-top: 0;
+    border-top: 0;
+    padding: 0 0 0 12px;
+    width: auto;
+  }
+  .sync-barra button.accion { width: auto; }
+  .sync-vacio { display: none; }
+}

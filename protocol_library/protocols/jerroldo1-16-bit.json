@@ -1,0 +1,105 @@
+{
+ "schema_version": "1.0.0",
+ "name": "JerroldO1 16 Bit",
+ "definicion": {
+  "Name": "JerroldO1 16 Bit",
+  "CarrierFrequency": 38000,
+  "IRSegments": [
+   {
+    "Name": "JerroldO1 16 Bit",
+    "Header": [
+     {
+      "Type": 1,
+      "Value": 9000
+     },
+     {
+      "Type": 0,
+      "Value": 4520
+     }
+    ],
+    "Trailer": [
+     {
+      "Type": 1,
+      "Value": 495
+     }
+    ],
+    "Payload": {
+     "EncodingType": 0,
+     "NumberOfBits": 16,
+     "Encodings": [
+      {
+       "BitType": 0,
+       "Atoms": [
+        {
+         "Type": 1,
+         "Value": 495
+        },
+        {
+         "Type": 0,
+         "Value": 2250
+        }
+       ]
+      },
+      {
+       "BitType": 1,
+       "Atoms": [
+        {
+         "Type": 1,
+         "Value": 495
+        },
+        {
+         "Type": 0,
+         "Value": 4505
+        }
+       ]
+      }
+     ]
+    },
+    "TotalLength": 100000
+   }
+  ],
+  "CodeSegments": [
+   {
+    "Name": "JerroldO1 16 Bit KeyCodeRepeat",
+    "Header": [],
+    "Trailer": [],
+    "Payload": null,
+    "Atoms": [
+     {
+      "Type": 1,
+      "Value": 9020
+     },
+     {
+      "Type": 0,
+      "Value": 2250
+     },
+     {
+      "Type": 1,
+      "Value": 495
+     }
+    ],
+    "TotalLength": 99000
+   }
+  ],
+  "KeyCode": {
+   "Start": [
+    {
+     "SegmentName": "JerroldO1 16 Bit"
+    }
+   ],
+   "Repeat": [
+    {
+     "SegmentName": "JerroldO1 16 Bit KeyCodeRepeat"
+    }
+   ],
+   "Finish": null
+  }
+ },
+ "origin": {
+  "source": "config_work/read_ir.py:PROTOCOLOS_EMBEBIDOS",
+  "category": "manual",
+  "label": "embebido-en-el-codigo",
+  "agregado_en": "2026-08-02T14:00:00Z"
+ },
+ "fingerprint": "bd09b3712ac939e8e5355fdac16ba22719e9027726a351294c0955128281a739"
+}

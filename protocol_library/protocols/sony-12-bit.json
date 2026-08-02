@@ -1,0 +1,70 @@
+{
+ "schema_version": "1.0.0",
+ "name": "Sony 12 Bit",
+ "definicion": {
+  "Name": "Sony 12 Bit",
+  "CarrierFrequency": 40000,
+  "IRSegments": [
+   {
+    "Name": "Sony 12 Bit",
+    "Header": [
+     {
+      "Type": 1,
+      "Value": 2400
+     }
+    ],
+    "Trailer": [],
+    "Payload": {
+     "EncodingType": 0,
+     "NumberOfBits": 12,
+     "Encodings": [
+      {
+       "BitType": 0,
+       "Atoms": [
+        {
+         "Type": 0,
+         "Value": 600
+        },
+        {
+         "Type": 1,
+         "Value": 600
+        }
+       ]
+      },
+      {
+       "BitType": 1,
+       "Atoms": [
+        {
+         "Type": 0,
+         "Value": 600
+        },
+        {
+         "Type": 1,
+         "Value": 1200
+        }
+       ]
+      }
+     ]
+    },
+    "TotalLength": 45000
+   }
+  ],
+  "CodeSegments": [],
+  "KeyCode": {
+   "Start": null,
+   "Repeat": [
+    {
+     "SegmentName": "Sony 12 Bit"
+    }
+   ],
+   "Finish": null
+  }
+ },
+ "origin": {
+  "source": "config_work/read_ir.py:PROTOCOLOS_EMBEBIDOS",
+  "category": "manual",
+  "label": "embebido-en-el-codigo",
+  "agregado_en": "2026-08-02T14:00:00Z"
+ },
+ "fingerprint": "e191a2b2be4a02670efae9e3f6f0d79f11fc23e6104cb053816a22eec248c860"
+}

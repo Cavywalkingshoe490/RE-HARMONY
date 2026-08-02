@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RE-HARMONY</title>
+<link rel="stylesheet" href="app.css" />
+</head>
+<body>
+
+<nav>
+  <h1>RE-HARMONY</h1>
+  <button class="nav" data-p="cuenta" aria-current="page">Account</button>
+  <button class="nav" data-p="catalogo">Catalog</button>
+  <button class="nav" data-p="aprender">Learn</button>
+  <button class="nav" data-p="check">Control</button>
+  <button class="nav" data-p="activities">Activities</button>
+  <button class="nav" data-p="mapeo">Keys</button>
+  <button class="nav" data-p="historial">History</button>
+
+  <!-- The Sync bar. It is NOT a tab: it lives in the nav so it survives
+       switching screens, because the changes it lists are made across
+       several screens and applied in one go. -->
+  <div class="sync-barra" id="sync-barra">
+    <div id="sync-vacio" class="sync-vacio">No changes waiting</div>
+    <button class="accion primaria" id="btn-sync" hidden>Sync</button>
+  </div>
+
+  <div class="pie">
+    <div id="pie-estado">starting...</div>
+  </div>
+</nav>
+
+<main>
+
+<!-- ==================== ACCOUNT ==================== -->
+<section id="cuenta" class="viva">
+  <h2>Account</h2>
+  <p class="sub">The password goes to the system keychain. Never to a file in the project.</p>
+
+  <div class="tarjeta">
+    <h3>Logitech session</h3>
+    <div id="cuenta-estado" class="vacio">loading...</div>
+
+    <!-- THE KEYCHAIN IS NOT READ TO DRAW THIS SCREEN.
+         Reading it makes macOS ask for permission, and this card used to be
+         drawn on the first paint, on the landing tab: the app asked for a
+         credential on every launch before the user had done anything. It
+         takes this button now. -->
+    <p><button class="accion" id="btn-keychain" type="button">
+      Look up the saved account (asks the system keychain)
+    </button></p>
+
+    <!-- NO PASSWORD FIELD UNLESS IT CAN ACTUALLY DO SOMETHING.
+         Signing in needs the account client, which is a separate piece and
+         is not part of this repo. When it is missing, `account_status`
+         answers `ok:false` and `app.js` HIDES this whole form and shows
+         `#cuenta-sin-cliente` instead. A password box that cannot possibly
+         work is worse than no box: it asks for a credential and then
+         silently does nothing with it. -->
+    <div id="cuenta-formulario" hidden>
+      <label for="email">Email</label>
+      <input type="text" id="email" autocomplete="username" spellcheck="false" />
+      <label for="password">Password</label>
+      <input type="password" id="password" autocomplete="current-password" />
+      <label class="chk"><input type="checkbox" id="recordar" checked /> Save the password to the keychain</label>
+      <div class="fila">
+        <button class="accion primaria" id="btn-login" disabled>Log in</button>
+        <button class="accion" id="btn-renovar" disabled>Renew session</button>
+        <button class="accion" id="btn-olvidar" disabled>Forget password</button>
+      </div>
+      <p class="sub chico">These three buttons are the only ones in the whole app
+        that touch your Logitech account, and even they only sign in and out.
+        Nothing here creates, changes or deletes anything on Logitech's side:
+        searching for a device only reads the public catalog. "Forget password"
+        erases it from this computer's keychain -- your Logitech account itself
+        stays exactly as it is.</p>
+    </div>
+
+    <div id="cuenta-sin-cliente" hidden>
+      <p class="sub">Signing in is <b>not available in this build</b>: the client
+        that talks to the account service is not installed, so there is nothing
+        this screen could do with a password. It is not asked for.</p>
+      <p class="sub chico">Everything that does not need an account still works,
+        and that is most of the app: reading the remote, importing a
+        <code>.ir</code> file (Flipper Zero / IRDB) from the <b>Learn</b> screen,
+        building a device out of it, editing keys and activities, generating the
+        blob and writing it. The <b>Catalog</b> screen is the only other one that
+        needs the account, and it says so on its own.</p>
+    </div>
+
+    <pre id="cuenta-salida" hidden></pre>
+  </div>
+
+  <details class="tarjeta detalle">
+    <summary>Show technical details</summary>
+    <div id="entorno"></div>
+  </details>
+</section>
+
+<!-- ==================== CATALOG ==================== -->
+<section id="catalogo">
+  <h2>Catalog</h2>
+  <p class="sub">This is where the devices you later add to the control come from.
+    Searching and saving is <b>read-only</b> against Logitech's public catalog:
+    nothing is created or deleted in your account.</p>
+
+  <div class="tarjeta">
+    <h3>Search the catalog</h3>
+    <div class="fila">
+      <input type="text" id="fab" placeholder="Brand -- e.g. Philips" />
+      <input type="text" id="mod" placeholder="Model -- e.g. 42PFL5008" />
+      <button class="accion primaria" id="btn-buscar" disabled>Search</button>
+    </div>
+    <div id="resultados" class="vacio">no search yet</div>
+    <div id="bajada" hidden></div>
+  </div>
+
+  <!-- DOWNLOADED BUT NOT USABLE YET.
+       Downloading is TWO things that used to be reported as one: the package
+       comes down from Logitech (network + account), and then it has to be
+       joined with its protocol's timings, which live on this computer. The
+       second half can fail with the first half perfectly fine -- and when it
+       does, the expensive half is already paid for. This card exists so that
+       half is not thrown away and the device does not have to be searched for
+       again: the moment the protocol lands (an .ir imported below, or another
+       device of the same family downloaded), Resume finishes it. -->
+  <div class="tarjeta" id="tarjeta-pendientes" hidden>
+    <h3>Downloaded, waiting for a protocol</h3>
+    <p class="sub chico">These came down from Logitech's catalog but could
+      <b>not</b> be saved as devices, so they are <b>not</b> in the list to send
+      to the remote. The catalog brings each button's payload but never the
+      protocol's <b>timings</b> -- those have to be on this computer already.
+      Nothing here was lost: import an <code>.ir</code> of the same family once
+      (below) and press <b>Resume</b>.</p>
+    <!-- Outside #pendientes on purpose: `cargarPendientes()` rewrites
+         #pendientes whole, so a note written inside it would be destroyed by
+         the very refresh that follows a successful Resume. -->
+    <div id="pendientes-aviso"></div>
+    <div id="pendientes" class="vacio">loading...</div>
+  </div>
+
+  <div class="tarjeta">
+    <h3>Import an .ir file</h3>
+    <p class="sub chico">For a device the catalog doesn't have, or whose
+      protocol isn't on disk yet. An <code>.ir</code> file from a Flipper Zero
+      (or from the public IRDB) carries the waveform measured in microseconds, which is
+      exactly what the control needs. It doesn't use the internet or your account.</p>
+    <div class="fila">
+      <button class="accion" id="btn-ir-elegir">Choose .ir file...</button>
+      <span id="ir-archivo" class="vacio">no file chosen</span>
+    </div>
+    <div id="ir-analisis"></div>
+    <div id="ir-datos" hidden>
+      <div class="fila">
+        <input type="text" id="ir-fab" placeholder="Brand -- Acme" />
+        <input type="text" id="ir-mod" placeholder="Model -- TV-9000" />
+      </div>
+      <label for="ir-nombre">What it will be called in the control's menu</label>
+      <input type="text" id="ir-nombre" placeholder="TV" spellcheck="false" />
+      <div id="ir-aviso-nombre"></div>
+      <div class="fila">
+        <button class="accion primaria" id="btn-ir-importar" disabled>Import</button>
+      </div>
+    </div>
+    <div id="ir-salida" hidden></div>
+  </div>
+
+  <div class="tarjeta">
+    <h3>Ready to add to the control</h3>
+    <p class="sub chico">Everything downloaded or imported on this computer.
+      The ones marked <b>Ready</b> have the commands <b>and</b> their protocol's
+      timing definition, so they show up in the Control dropdown; the ones marked
+      <b>Not usable yet</b> say what they are missing. The commands are recounted
+      straight from the file itself, not from the summary written inside it.</p>
+    <!-- OUTSIDE #locales ON PURPOSE. `cargarLocales()` rewrites #locales
+         whole, so anything written inside it is destroyed by the very
+         refresh that follows a successful delete -- that is exactly how the
+         "deleted" confirmation used to end up in a detached node that the
+         user never saw. This one survives the repaint. -->
+    <div id="locales-aviso"></div>
+    <div id="locales" class="vacio">loading...</div>
+  </div>
+</section>
+
+<!-- ==================== CONTROL ==================== -->
+<section id="check">
+  <h2>Control</h2>
+  <p class="sub">Add a TV or another device to your Harmony One.</p>
+
+  <!-- Top: the control's status, in one human-readable line.
+
+       The button says CONNECT, not "Refresh". "Refresh" named nothing that
+       actually happens: what the button does is connect to the remote over
+       USB and read its whole memory. And because that read is ~80 USB
+       transactions of 16 KiB (a couple of minutes), it gets a REAL progress
+       bar underneath -- the numbers next to it are bytes that arrived, so
+       there is no way for it to be an animation that moves on its own. The
+       markup lives here but stays hidden until a read starts; the text and
+       the width are written by `conectarPintarAvance()` in app.js. -->
+  <div class="tarjeta">
+    <div id="estado-control" class="estado-grande cargando">detecting your control...</div>
+    <div id="estado-control-detalle"></div>
+    <div id="conectar-avance" hidden>
+      <div class="sync-barra-prog">
+        <div class="sync-barra-prog-relleno" id="conectar-prog-relleno" style="width:0%"></div>
+      </div>
+      <div class="sync-prog-txt" id="conectar-prog-txt">starting...</div>
+    </div>
+    <div class="fila">
+      <button class="accion chico" id="btn-refrescar-control" disabled>Connect</button>
+    </div>
+  </div>
+
+  <!-- What the control has today. You can remove what you added. -->
+  <div class="tarjeta" id="tarjeta-dispositivos" hidden>
+    <h3>What your control has now</h3>
+    <p class="sub chico" id="dispositivos-origen"></p>
+    <div id="lista-dispositivos"><span class="vacio">loading...</span></div>
+    <div id="zona-borrar"></div>
+  </div>
+
+  <!-- Choose what to add. Only shows up when the remote is connected. -->
+  <div class="tarjeta" id="tarjeta-elegir" hidden>
+    <h3>Add a device</h3>
+
+    <div id="sin-catalogo" hidden>
+      <p class="sub chico" style="margin:0 0 14px">
+        There's no device ready to add yet. You get one two ways, both on
+        the Catalog tab, and neither touches your account: search for it
+        in the public catalog, or import an <code>.ir</code> file for the device.
+      </p>
+      <div class="fila">
+        <button class="accion primaria" id="btn-ir-catalogo">Go to Catalog</button>
+      </div>
+    </div>
+
+    <div id="con-catalogo" hidden>
+      <label for="s-json">What to add</label>
+      <select id="s-json"><option value="">choose one...</option></select>
+
+      <div id="s-disp-envoltorio" hidden>
+        <label for="s-disp">Which one from that file</label>
+        <select id="s-disp"></select>
+      </div>
+
+      <label for="s-nombre">What it will be called in the control's menu</label>
+      <input type="text" id="s-nombre" placeholder="Philips" spellcheck="false" />
+      <div id="s-etiqueta-aviso"></div>
+
+      <div id="resumen-cambio"></div>
+    </div>
+  </div>
+
+  <!-- Bottom: what's about to change, and the one button. -->
+  <div class="tarjeta" id="tarjeta-aplicar" hidden>
+    <div id="zona-aplicar"></div>
+  </div>
+
+  <!-- The technical stuff: collapsed, not deleted, for when something fails. -->
+  <details class="tarjeta detalle">
+    <summary>Show details</summary>
+    <div id="detalle-tecnico" class="vacio">Nothing has been applied in this session yet.</div>
+  </details>
+</section>
+
+<!-- ==================== ACTIVITIES ==================== -->
+<section id="activities">
+  <h2>Activities</h2>
+  <p class="sub">An activity is a button that turns on several devices together and
+    sets them to the right input. Here you can see <b>which device each one uses</b>
+    -- read from your control's configuration, not guessed -- and it can be
+    changed.</p>
+
+  <!-- Visible by default, NOT inside a collapsed <details>: the whole point
+       is that "how do I load an activity" was the thing that wasn't clear,
+       and hiding the answer behind a click is what made it unclear. -->
+  <div class="tarjeta">
+    <h3>How activities work here</h3>
+    <div id="act-como"></div>
+  </div>
+
+  <div class="tarjeta">
+    <p class="sub chico" id="act-origen"></p>
+    <div id="act-lista"><span class="vacio">loading...</span></div>
+  </div>
+
+  <div class="tarjeta" id="act-tarjeta-editar" hidden>
+    <div id="act-editar"></div>
+  </div>
+
+  <div class="tarjeta" id="act-tarjeta-aplicar" hidden>
+    <div id="act-zona-aplicar"></div>
+  </div>
+
+  <div class="tarjeta">
+    <h3>Create a new activity</h3>
+    <div id="act-crear"><span class="vacio">loading...</span></div>
+  </div>
+
+  <details class="tarjeta detalle">
+    <summary>How it's determined which device each activity uses</summary>
+    <div id="act-metodo" class="vacio">loading...</div>
+  </details>
+
+  <details class="tarjeta detalle">
+    <summary>Show details</summary>
+    <div id="act-detalle-tecnico" class="vacio">Nothing has been applied in this session yet.</div>
+  </details>
+</section>
+
+<!-- ==================== KEYS ==================== -->
+<section id="mapeo">
+  <h2>Keys</h2>
+  <p class="sub">What each button on your control does today, and how to change it.
+    Tap a button in the photo, choose the device, and what you want it to do.</p>
+
+  <div id="teclas-estado" class="vacio">loading your control's button map...</div>
+
+  <div class="teclas-barra" hidden>
+    <div class="teclas-grupo">
+      <label for="teclas-actividad">When you're in the activity</label>
+      <select id="teclas-actividad"></select>
+      <span class="pista" id="teclas-actividad-pista"></span>
+    </div>
+  </div>
+
+  <div class="mapeo-layout">
+    <div class="mapeo-mando">
+      <div class="mando-foto" id="mando-foto">
+        <!-- The drawing and the zones both come from app/ui/remote/keys.json,
+             whose coordinates were measured; there isn't a single
+             hand-written coordinate here. The background is generated by
+             config_work/draw_remote_svg.py -- no photograph is
+             redistributed, and you can regenerate remote.svg yourself. -->
+        <img id="mando-img" src="remote/remote.svg"
+             alt="The remote, drawn from the measured button coordinates, with each button clickable" />
+        <svg id="capa-zonas" class="capa-zonas" xmlns="http://www.w3.org/2000/svg"
+             viewBox="0 0 246 907" preserveAspectRatio="xMidYMid meet"
+             role="group" aria-label="the remote's buttons"></svg>
+      </div>
+      <p class="pie-foto" id="mando-pie"></p>
+    </div>
+
+    <div class="mapeo-panel">
+      <div class="leyenda">
+        <span class="pastilla asignada">already does something</span>
+        <span class="pastilla libre">free</span>
+        <span class="pastilla pendiente">changed, not applied</span>
+        <span class="pastilla bloqueada">can't be changed</span>
+      </div>
+
+      <!-- THE STANDARD KEYS. A device the app adds arrives with its own page
+           declaring four rows and nothing else, so none of the rubber keys
+           does anything while you are standing on it. The three devices the
+           remote came with declare 49 rows each -- the whole keyboard tied
+           to that one device. This card says, per device, how many of those
+           standard keys are bound today, which ones can't be, and why; and
+           it offers to bind the missing ones on a device that is ALREADY on
+           the remote. Every number here is measured in Python
+           (`plantilla_teclas.plan_dispositivo`), never counted in JS. -->
+      <div class="tarjeta" id="teclas-plantilla-tarjeta">
+        <h3>Standard keys, device by device</h3>
+        <p class="sub chico">When you add a device this happens on its own.
+          This is where you fix one that is already on the control.</p>
+        <div id="teclas-plantilla" class="vacio">loading...</div>
+      </div>
+
+      <div class="tarjeta">
+        <h3>Selected button</h3>
+        <div id="mapeo-tecla" class="vacio">Tap a button in the photo.</div>
+
+        <div id="mapeo-asignar" hidden>
+          <label for="mapeo-dispositivo">Which device</label>
+          <select id="mapeo-dispositivo"><option value="">choose one...</option></select>
+
+          <label for="mapeo-comando">What it should do</label>
+          <select id="mapeo-comando" disabled><option value="">choose a device first</option></select>
+
+          <!-- WHERE it takes effect. This is not a detail: a rubber key is
+               bound per place, and writing it in the wrong one is a change
+               that records fine, verifies fine and does nothing (recording #7).
+               Only sites that can actually work are listed; when none can,
+               the reason shows here instead of an empty selector. -->
+          <label for="mapeo-sitio">Where it should work</label>
+          <select id="mapeo-sitio" disabled><option value="">choose a device first</option></select>
+          <p class="pista" id="mapeo-sitio-pista"></p>
+
+          <div class="fila">
+            <button class="accion primaria chico" id="btn-mapeo-asignar" disabled>Change this button</button>
+            <button class="accion chico" id="btn-mapeo-quitar" disabled>Leave it as it was</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tarjeta">
+        <h3>Unapplied changes</h3>
+        <div id="mapeo-lista" class="vacio">none yet</div>
+        <div class="fila" id="teclas-acciones" hidden>
+          <button class="accion primaria" id="btn-teclas-aplicar">Apply changes</button>
+          <button class="accion" id="btn-teclas-descartar">Discard all</button>
+        </div>
+        <div id="teclas-resultado"></div>
+        <div id="teclas-siguiente"></div>
+      </div>
+
+      <details class="tarjeta" id="teclas-cobertura">
+        <summary>How many keys can be changed, and why the others can't</summary>
+        <div id="teclas-cobertura-cuerpo" class="vacio">loading...</div>
+      </details>
+
+      <details class="tarjeta" id="teclas-detalles">
+        <summary>Show details</summary>
+        <div id="teclas-detalles-cuerpo" class="vacio">there's nothing technical to show yet</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== HISTORY ==================== -->
+<section id="historial">
+  <h2>History</h2>
+  <p class="sub">What's on the control, when it was recorded, and what to roll back with.</p>
+
+  <div class="tarjeta">
+    <h3>Regression anchor</h3>
+    <p class="sub chico">The file that's currently recorded and verified on your
+      control. Regenerating it from scratch has to produce, byte for byte,
+      that exact same file.</p>
+    <div id="ancla"></div>
+    <div class="fila">
+      <button class="accion" id="btn-ancla" disabled>Regenerate and compare</button>
+      <span id="ancla-chips"></span>
+    </div>
+    <div id="ancla-pasos"></div>
+  </div>
+
+  <div class="tarjeta">
+    <h3>Recordings</h3>
+    <div id="tabla-hist" class="vacio">loading...</div>
+    <pre id="rollback" hidden></pre>
+  </div>
+</section>
+
+<!-- ==================== LEARN ==================== -->
+<section id="aprender">
+  <h2>Learn</h2>
+  <p class="sub">Register a device that is NOT in Logitech's catalog, using the IR
+    receiver the Harmony One itself has at the top: point the original remote
+    at it, press the button, and the remote returns the waveform.</p>
+
+  <div class="nota aviso" id="apr-sin-probar">loading...</div>
+
+  <div class="tarjeta">
+    <h3>1. The device</h3>
+    <p class="sub chico">The name is validated against the hardware as you type
+      it: there has to be a font that DRAWS each letter, and the control has to
+      know how to WRITE it. The device can't draw <code>Q</code>,
+      <code>X</code>, or <code>Z</code>.</p>
+    <div class="dos">
+      <div>
+        <label for="apr-fab">Brand</label>
+        <input type="text" id="apr-fab" placeholder="Acme" spellcheck="false" />
+      </div>
+      <div>
+        <label for="apr-mod">Model</label>
+        <input type="text" id="apr-mod" placeholder="TV-1000" spellcheck="false" />
+      </div>
+    </div>
+    <label for="apr-nombre">Name you'll see on the control</label>
+    <input type="text" id="apr-nombre" placeholder="TV" spellcheck="false" />
+    <div id="apr-validacion"><div class="vacio">type the name</div></div>
+    <p class="sub chico" style="margin-top:12px">Checked against the
+      configuration your control has today: <span id="apr-blob"></span></p>
+  </div>
+
+  <div class="tarjeta">
+    <h3>2. The commands</h3>
+    <p class="sub chico" id="apr-dos-veces"></p>
+    <div id="apr-comandos"><div class="vacio">loading...</div></div>
+  </div>
+
+  <div class="tarjeta apr-banco">
+    <h3>Test bench</h3>
+    <p class="sub chico">Without the remote plugged in there's no way to capture
+      anything. This replaces the capture with a REAL waveform already recorded
+      on the device (one it already had), so you can go through the whole
+      screen and see that recognition and comparison do what they claim.
+      <b>It's not a capture</b>: any command learned this way stays flagged, and
+      the summary repeats that before saving.</p>
+    <label class="chk"><input type="checkbox" id="apr-usar-banco" /> Use the
+      test bench instead of the receiver</label>
+    <label class="chk"><input type="checkbox" id="apr-banco-sesgo" /> Simulate
+      a known glitch from real captures (the first pulse reads too long) --
+      recognition still has to succeed, just by matching a later frame
+      instead of the first one</label>
+    <div id="apr-banco-select"></div>
+  </div>
+
+  <div class="tarjeta">
+    <h3>3. Save</h3>
+    <p class="sub chico">It's saved in the same format and the same folder as a
+      device downloaded from the catalog, so the rest of the app treats it
+      exactly the same way. From there it is the same as any other device:
+      go to Control, choose it, apply it, and the button that writes to your
+      remote only appears once everything checks out.</p>
+    <div id="apr-resumen"></div>
+    <div class="fila" id="apr-zona-guardar"></div>
+    <div id="apr-guardado"></div>
+  </div>
+</section>
+
+</main>
+
+<div id="apr-modal" hidden>
+  <div class="apr-caja" id="apr-modal-cuerpo"></div>
+</div>
+
+<!-- The Sync session: summary -> gate -> write -> progress -> did it boot? -->
+<div id="sync-modal" hidden>
+  <div class="sync-caja">
+    <div class="sync-cabecera">
+      <h3 id="sync-titulo">Changes waiting to go to the control</h3>
+      <button class="sync-cerrar" id="btn-sync-cerrar" aria-label="close">&times;</button>
+    </div>
+    <div id="sync-cuerpo"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<link rel="stylesheet" href="learn.css" />
+<script src="learn.js"></script>
+</body>
+</html>

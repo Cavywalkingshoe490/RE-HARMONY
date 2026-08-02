@@ -1,0 +1,19 @@
+#!/bin/bash
+# Dev launcher: activates the venv and opens the app, so you don't have to
+# type `app/.venv/bin/python app/main.py` by hand every time.
+#
+#   ./RE-HARMONY
+#
+# Run `python3 first_run.py` first, with the remote plugged in: without
+# your own baseline the app opens but has no reference to work from.
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PYTHON="$HERE/app/.venv/bin/python"
+
+if [ ! -x "$PYTHON" ]; then
+    echo "RE-HARMONY: no venv at app/.venv -- run 'uv sync' inside app/ first" >&2
+    exit 1
+fi
+
+exec "$PYTHON" "$HERE/app/main.py" "$@"

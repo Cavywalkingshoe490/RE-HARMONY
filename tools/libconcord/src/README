@@ -1,0 +1,19 @@
+Libconcord, part of the concordance project, is a library that allows you
+to talk to Logitech Harmony universal remote controls (as well as other
+similar remotes).
+
+It's default client is called concordance and is also available as part
+of the concordance project. The library is release under the GPLv3.
+
+Please see libconcord.h for documentation on all of the API calls, and
+see the concordance source code for a complete example of how to use
+them.
+
+You can find more information at http://www.phildev.net/concordance/
+
+
+THIS SOFTWARE IS NOT SUPPORTED BY OR IN ANY WAY RELATED TO LOGITECH!
+
+
+- Phil Dibowitz
+

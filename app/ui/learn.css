@@ -1,0 +1,146 @@
+/* Learn screen. A separate file from `app.css` on purpose: it doesn't touch a
+   single one of the existing rules, so it can't knock the other four screens
+   out of place. It uses the same colour variables as `app.css` (:root). */
+
+.apr-grupo { margin-top: 18px; }
+.apr-grupo:first-child { margin-top: 4px; }
+.apr-grupo > h4 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tenue);
+}
+
+.apr-rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 8px;
+}
+
+.apr-cmd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  padding: 9px 11px;
+  background: var(--panel);
+}
+.apr-cmd.listo { border-color: var(--acento); background: var(--acento-suave); }
+.apr-cmd.fallo { border-color: var(--alarma); background: var(--alarma-suave); }
+
+.apr-cmd-izq { min-width: 0; }
+.apr-cmd-etq { font-size: 14px; font-weight: 600; }
+.apr-cmd-sub {
+  font-size: 11.5px;
+  color: var(--suave);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.apr-cmd button {
+  flex: 0 0 auto;
+  font-size: 12.5px;
+  padding: 5px 10px;
+  margin: 0;
+}
+
+/* --- the waveform ------------------------------------------------------- */
+.apr-onda {
+  width: 100%;
+  height: 62px;
+  display: block;
+  background: var(--bg);
+  border: 1px solid var(--linea);
+  border-radius: 6px;
+}
+.apr-onda .marca { fill: var(--acento); }
+.apr-onda .eje { stroke: var(--linea-fuerte); stroke-width: 1; }
+.apr-onda .corte { stroke: var(--aviso); stroke-width: 1; stroke-dasharray: 2 2; }
+
+.apr-onda-pie {
+  font-size: 11.5px;
+  color: var(--suave);
+  margin-top: 5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* --- the capture modal -------------------------------------------------- */
+#apr-modal[hidden] { display: none; }
+#apr-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 24px;
+}
+.apr-caja {
+  background: var(--panel);
+  border-radius: 14px;
+  border: 1px solid var(--linea-fuerte);
+  padding: 24px 26px;
+  max-width: 620px;
+  width: 100%;
+  max-height: 88vh;
+  overflow: auto;
+}
+.apr-caja h3 { margin: 0 0 4px; font-size: 17px; }
+.apr-paso {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tenue);
+  margin-bottom: 14px;
+}
+.apr-instruccion {
+  font-size: 15px;
+  line-height: 1.5;
+  border-left: 3px solid var(--acento);
+  background: var(--acento-suave);
+  padding: 12px 14px;
+  border-radius: 0 8px 8px 0;
+  margin: 0 0 16px;
+}
+.apr-latido {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--alarma);
+  margin-right: 7px;
+  animation: apr-pulso 1s ease-in-out infinite;
+}
+@keyframes apr-pulso {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.7); }
+}
+
+.apr-banco {
+  border-style: dashed;
+}
+.apr-banco h3::after {
+  content: "not a capture";
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--aviso);
+  border: 1px solid var(--aviso);
+  border-radius: 999px;
+  padding: 1px 8px;
+  margin-left: 9px;
+  vertical-align: middle;
+}
+
+.apr-letras {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 700;
+  color: var(--alarma);
+}

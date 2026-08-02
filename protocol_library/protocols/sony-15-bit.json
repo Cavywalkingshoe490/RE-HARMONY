@@ -1,0 +1,70 @@
+{
+ "schema_version": "1.0.0",
+ "name": "Sony 15 Bit",
+ "definicion": {
+  "Name": "Sony 15 Bit",
+  "CarrierFrequency": 40000,
+  "IRSegments": [
+   {
+    "Name": "Sony 15 Bit",
+    "Header": [
+     {
+      "Type": 1,
+      "Value": 2400
+     }
+    ],
+    "Trailer": [],
+    "Payload": {
+     "EncodingType": 0,
+     "NumberOfBits": 15,
+     "Encodings": [
+      {
+       "BitType": 0,
+       "Atoms": [
+        {
+         "Type": 0,
+         "Value": 600
+        },
+        {
+         "Type": 1,
+         "Value": 600
+        }
+       ]
+      },
+      {
+       "BitType": 1,
+       "Atoms": [
+        {
+         "Type": 0,
+         "Value": 600
+        },
+        {
+         "Type": 1,
+         "Value": 1200
+        }
+       ]
+      }
+     ]
+    },
+    "TotalLength": 45000
+   }
+  ],
+  "CodeSegments": [],
+  "KeyCode": {
+   "Start": null,
+   "Repeat": [
+    {
+     "SegmentName": "Sony 15 Bit"
+    }
+   ],
+   "Finish": null
+  }
+ },
+ "origin": {
+  "source": "config_work/read_ir.py:PROTOCOLOS_EMBEBIDOS",
+  "category": "manual",
+  "label": "embebido-en-el-codigo",
+  "agregado_en": "2026-08-02T14:00:00Z"
+ },
+ "fingerprint": "cb46997e77a384f388b78dd057e134e372d9c64bacd66f4b9d924dcbb78ae0e9"
+}

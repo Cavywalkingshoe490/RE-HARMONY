@@ -1,0 +1,83 @@
+{
+ "schema_version": "1.0.0",
+ "name": "LG 28 Bit",
+ "definicion": {
+  "Name": "LG 28 Bit",
+  "CarrierFrequency": 37725,
+  "IRSegments": [
+   {
+    "Name": "LG 28 Bit",
+    "Header": [
+     {
+      "Type": 1,
+      "Value": 8473
+     },
+     {
+      "Type": 0,
+      "Value": 4250
+     },
+     {
+      "Type": 1,
+      "Value": 515
+     }
+    ],
+    "Trailer": [
+     {
+      "Type": 0,
+      "Value": 50000
+     }
+    ],
+    "Payload": {
+     "EncodingType": 0,
+     "NumberOfBits": 28,
+     "Encodings": [
+      {
+       "BitType": 0,
+       "Atoms": [
+        {
+         "Type": 0,
+         "Value": 545
+        },
+        {
+         "Type": 1,
+         "Value": 515
+        }
+       ]
+      },
+      {
+       "BitType": 1,
+       "Atoms": [
+        {
+         "Type": 0,
+         "Value": 1605
+        },
+        {
+         "Type": 1,
+         "Value": 515
+        }
+       ]
+      }
+     ]
+    },
+    "TotalLength": 0
+   }
+  ],
+  "CodeSegments": [],
+  "KeyCode": {
+   "Start": null,
+   "Repeat": [
+    {
+     "SegmentName": "LG 28 Bit"
+    }
+   ],
+   "Finish": null
+  }
+ },
+ "origin": {
+  "source": "config_work/read_ir.py:PROTOCOLOS_EMBEBIDOS",
+  "category": "manual",
+  "label": "embebido-en-el-codigo",
+  "agregado_en": "2026-08-02T14:00:00Z"
+ },
+ "fingerprint": "80a684e2e3508e438d30c36646c285ebba13a236174bbd468e01102f55187005"
+}

